@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .progress-bar {
+            width: 80%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin: 20px auto;
+            display: none;
+        }
+        .progress-bar-inner {
+            height: 20px;
+            width: 0;
+            background-color: #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Video Downloader</h1>
+        <form>
+            <label for="url">YouTube URL:</label>
+            <input type="text" id="url" name="url" required>
+            <button type="button" onclick="downloadVideo()">Download</button>
+        </form>
+        <div class="progress-bar" id="progress-bar">
+            <div class="progress-bar-inner" id="progress-bar-inner">0%</div>
+        </div>
+    </div>
+
+    <script>
+        function downloadVideo() {
+            const url = document.getElementById('url').value;
+
+            // Check if URL is provided
+            if (!url) {
+                alert('Please enter a YouTube URL.');
+                return;
+            }
+
+            // Show progress bar
+            const progressBar = document.getElementById('progress-bar');
+            const progressBarInner = document.getElementById('progress-bar-inner');
+            progressBar.style.display = 'block';
+            progressBarInner.style.width = '0%';
+            progressBarInner.textContent = '0%';
+
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBarInner.style.width = progress + '%';
+                progressBarInner.textContent = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 500);
+
+            // Sending the URL to the backend
+            fetch('http://localhost:5000/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Trigger file download
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = data.download_url;  // The URL sent back from the backend
+                    downloadLink.download = data.filename; // The filename from the server
+                    downloadLink.click();  // Start the download
+                    alert('Download started!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while downloading the video.');
+            })
+            .finally(() => {
+                // Hide progress bar
+                clearInterval(interval);
+                progressBar.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
